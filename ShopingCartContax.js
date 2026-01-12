@@ -1,0 +1,46 @@
+import React, { createContext, useReducer, useContext } from 'react';
+import "../App.css"; 
+const CartContext = createContext();
+const cartReducer = (state, action) => {
+  switch(action.type) {
+    case 'ADD_ITEM': {
+      const existingItem = state.find(item => item.id === action.payload.id);
+      if (existingItem) {
+        return state.map(item => 
+          item.id === action.payload.id 
+            ? { ...item, quantity: item.quantity + 1 } 
+            : item
+        );
+      } else {
+        return [...state, { ...action.payload, quantity: 1 }];
+      }
+    }
+
+    case 'REMOVE_ITEM':
+      return state.filter(item => item.id !== action.payload.id);
+
+    case 'UPDATE_QUANTITY':
+      return state
+        .map(item => 
+          item.id === action.payload.id 
+            ? { ...item, quantity: parseInt(action.payload.quantity, 10) } 
+            : item
+        )
+        .filter(item => item.quantity > 0); // remove items with 0 quantity
+
+    default:
+      return state;
+  }
+};
+
+export const CartProvider = ({ children }) => {
+  const [cart, dispatch] = useReducer(cartReducer, []);
+
+  return (
+    <CartContext.Provider value={{ cart, dispatch }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+
+export const useCart = () => useContext(CartContext);
